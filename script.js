@@ -87,12 +87,15 @@ async function submitBlogPost(e) {
         return;
     }
     
+    // Check if editing
+    const isEditing = window.currentEditId !== undefined;
+    
     // Create post object with full timestamp
     const now = new Date();
     const timestamp = now.toISOString().replace('T', ' ').substring(0, 19); // YYYY-MM-DD HH:MM:SS
     
     const post = {
-        id: Date.now(),
+        id: isEditing ? window.currentEditId : Date.now(),
         title,
         emoji,
         category,
@@ -100,42 +103,65 @@ async function submitBlogPost(e) {
         content,
         tags: tagsInput.split(',').map(t => t.trim()).filter(t => t),
         date: timestamp,
-        createdAt: now.getTime()
+        createdAt: isEditing ? blogPosts.find(p => p.id == window.currentEditId)?.createdAt : now.getTime()
     };
     
-    console.log('📝 New post:', post);
+    console.log(isEditing ? '✏️ Update post:' : '📝 New post:', post);
     
     // Save to Firebase
     try {
-        const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts.json`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(post)
-        });
-        
-        if (response.ok) {
+        if (isEditing) {
+            // Find Firebase key for this post
+            const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts.json`);
             const data = await response.json();
-            console.log('✅ 文章已保存到 Firebase:', data.name);
             
-            // Add to local array
-            blogPosts.push(post);
+            let firebaseKey = null;
+            if (data) {
+                for (const key in data) {
+                    if (data[key].id == window.currentEditId) {
+                        firebaseKey = key;
+                        break;
+                    }
+                }
+            }
             
-            // Close modal
-            closeWriteArticleModal();
+            if (firebaseKey) {
+                await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/${firebaseKey}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(post)
+                });
+                console.log('✅ 文章已更新');
+            }
+        } else {
+            // New post
+            const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts.json`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(post)
+            });
             
-            // Reload and render
-            loadBlogPosts();
-            
-            // Show success notification
-            showSuccessNotification(title);
+            if (response.ok) {
+                const data = await response.json();
+                console.log('✅ 文章已保存到 Firebase:', data.name);
+            }
         }
+        
+        // Close modal and clear edit state
+        closeWriteArticleModal();
+        window.currentEditId = undefined;
+        
+        // Reload and render
+        loadBlogPosts();
+        
+        // Show success notification
+        showSuccessNotification(title, isEditing);
     } catch (error) {
         console.error('❌ Save failed:', error);
         alert('Failed to publish article');
     }
 }
-
-function showSuccessNotification(title) {
+function showSuccessNotification(title, isEditing = false) {
     const modal = document.createElement('div');
     modal.style.cssText = `
         position: fixed;
@@ -164,8 +190,8 @@ function showSuccessNotification(title) {
     
     content.innerHTML = `
         <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
-        <h2 style="margin: 0 0 10px 0; color: #333; font-size: 24px;">Published!</h2>
-        <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">Article published to blog</p>
+        <h2 style="margin: 0 0 10px 0; color: #333; font-size: 24px;">${isEditing ? 'Updated!' : 'Published!'}</h2>
+        <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">Article ${isEditing ? 'updated' : 'published'} successfully</p>
         <p style="margin: 0 0 30px 0; color: #999; font-size: 13px; word-break: break-word;">《${title}》</p>
         <button onclick="this.closest('[role=dialog]').remove()" style="
             padding: 12px 30px;
@@ -300,12 +326,6 @@ function renderArticlesList() {
                     <span class="article-date">${post.date}</span>
                     <span class="article-category">${categoryMap[post.category] || 'Other'}</span>
                 </div>
-                <p class="article-excerpt">${post.excerpt || post.content.substring(0, 100)}</p>
-                ${post.tags && post.tags.length > 0 ? `
-                    <div class="article-tags">
-                        ${post.tags.map(tag => `<span class="article-tag">#${tag}</span>`).join('')}
-                    </div>
-                ` : ''}
             </div>
         </div>
     `).join('');
@@ -330,6 +350,7 @@ function showArticleDetail(postId) {
         detailSection.innerHTML = `
             <div class="article-detail-container">
                 <button onclick="window.location.hash='#blog'" class="back-button">← Back</button>
+                
                 <div class="article-detail-header">
                     <span class="detail-emoji">${post.emoji || '📝'}</span>
                     <h1>${post.title}</h1>
@@ -338,14 +359,21 @@ function showArticleDetail(postId) {
                         <span>${categoryMap[post.category] || 'Other'}</span>
                     </div>
                 </div>
+                
                 <div class="article-detail-content">
                     ${post.content.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '').join('')}
                 </div>
+                
                 ${post.tags && post.tags.length > 0 ? `
                     <div class="detail-tags">
                         ${post.tags.map(tag => `<span class="detail-tag">#${tag}</span>`).join('')}
                     </div>
                 ` : ''}
+                
+                <div class="article-actions">
+                    <button class="btn btn-primary" onclick="editArticle(${post.id})">✏️ Edit</button>
+                    <button class="btn btn-danger" onclick="deleteArticle(${post.id})">🗑️ Delete</button>
+                </div>
             </div>
         `;
         detailSection.style.display = 'block';
@@ -475,3 +503,70 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sortSelect) sortSelect.addEventListener('change', applyFilters);
     if (categorySelect) categorySelect.addEventListener('change', applyFilters);
 });
+
+// ==================== EDIT & DELETE ====================
+function editArticle(postId) {
+    console.log('✏️ Edit article:', postId);
+    
+    const post = blogPosts.find(p => p.id == postId);
+    if (!post) {
+        console.error('❌ Post not found');
+        return;
+    }
+    
+    // Populate form with article data
+    document.getElementById('postTitle').value = post.title;
+    document.getElementById('postEmoji').value = post.emoji;
+    document.getElementById('postContent').value = post.content;
+    document.getElementById('postTags').value = post.tags.join(', ');
+    document.getElementById('postCategory').value = post.category;
+    
+    // Store ID for update
+    window.currentEditId = postId;
+    
+    // Open modal
+    openWriteArticleModal();
+}
+
+async function deleteArticle(postId) {
+    console.log('🗑️ Delete article:', postId);
+    
+    if (!confirm('Are you sure you want to delete this article?')) {
+        return;
+    }
+    
+    try {
+        // Find the article in Firebase
+        const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts.json`);
+        const data = await response.json();
+        
+        let firebaseKey = null;
+        if (data) {
+            for (const key in data) {
+                if (data[key].id == postId) {
+                    firebaseKey = key;
+                    break;
+                }
+            }
+        }
+        
+        // Delete from Firebase
+        if (firebaseKey) {
+            await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/${firebaseKey}.json`, {
+                method: 'DELETE'
+            });
+            console.log('✅ Article deleted from Firebase');
+        }
+        
+        // Remove from local array
+        blogPosts = blogPosts.filter(p => p.id != postId);
+        filteredPosts = filteredPosts.filter(p => p.id != postId);
+        
+        // Go back to blog
+        window.location.hash = '#blog';
+        renderArticlesList();
+    } catch (error) {
+        console.error('❌ Delete failed:', error);
+        alert('Failed to delete article');
+    }
+}
