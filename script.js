@@ -398,8 +398,8 @@ function submitBlogPost() {
         category: category
     };
     
-    // Save to Firebase if available
-    if (window.firebaseEnabled) {
+    // Save to Firebase if available (REST API from firebase-rest.js)
+    if (window.firebaseRestReady) {
         saveBlogPostToFirebase(newPost);
     } else {
         saveBlogPostLocally(newPost);
@@ -467,18 +467,8 @@ function deleteCurrentArticle() {
     }
 }
 
-// Firebase REST API storage functions
-// These functions are now handled by firebase-rest.js
-
-function saveBlogPostToFirebase(post) {
-    // Use the REST API function from firebase-rest.js
-    if (window.firebaseRestReady) {
-        saveBlogPostToFirebase(post);
-    } else {
-        console.log('Firebase REST API not ready, using localStorage');
-        saveBlogPostLocally(post);
-    }
-}
+// Firebase REST API functions are defined in firebase-rest.js
+// Just ensure they exist before using
 
 async function loadBlogPosts() {
     if (window.firebaseRestReady) {
