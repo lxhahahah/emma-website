@@ -249,7 +249,7 @@ function renderBlogPosts() {
                     <span class="blog-card-category">${categoryMap[post.category] || '其他'}</span>
                 </div>
                 <div class="blog-card-tags">
-                    ${post.tags.map(tag => `<span class="blog-card-tag">#${tag}</span>`).join('')}
+                    ${(post.tags || []).map(tag => `<span class="blog-card-tag">#${tag}</span>`).join('')}
                 </div>
                 <div class="blog-card-excerpt">${post.excerpt || post.content.substring(0, 80)}</div>
             </div>
