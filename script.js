@@ -215,8 +215,21 @@ function generateWordCloud() {
 // ========== FILTERING & SORTING ==========
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const sortOrder = document.getElementById('sortSelect').value;
-    const selectedCategory = document.getElementById('categorySelect').value;
+// ========== FILTERING & SORTING ==========
+function applyFilters() {
+    // Check if elements exist
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const categorySelect = document.getElementById('categorySelect');
+    
+    if (!searchInput || !sortSelect || !categorySelect) {
+        console.warn('Filter elements not yet loaded');
+        return;
+    }
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const sortOrder = sortSelect.value;
+    const selectedCategory = categorySelect.value;
 
     // Filter posts
     filteredPosts = blogPosts.filter(post => {
@@ -241,16 +254,6 @@ function applyFilters() {
 
     renderArticlesList();
 }
-
-function filterByKeyword(keyword) {
-    // Filter articles containing this keyword
-    const filtered = blogPosts.filter(post => 
-        post.title.toLowerCase().includes(keyword.toLowerCase()) ||
-        post.content.toLowerCase().includes(keyword.toLowerCase())
-    );
-    
-    filteredPosts = filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
-    renderArticlesList();
 }
 
 function renderArticlesList() {
