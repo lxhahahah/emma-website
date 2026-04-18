@@ -172,7 +172,20 @@ async function saveEditedContent() {
         originalContent.innerHTML = editedContent;
     }
     
-    // Save to Firebase with PUT method to specific path
+    // Save to localStorage (primary, always works)
+    try {
+        const data = {
+            section: currentEditSection,
+            content: editedContent,
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(`page_${currentEditSection}`, JSON.stringify(data));
+        console.log(`✅ Page "${currentEditSection}" saved to localStorage`);
+    } catch (error) {
+        console.error('❌ localStorage save failed:', error);
+    }
+    
+    // Also try to save to Firebase (secondary, for backup)
     try {
         const data = {
             section: currentEditSection,
@@ -180,56 +193,98 @@ async function saveEditedContent() {
             timestamp: new Date().toISOString()
         };
         
-        const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/pages/${currentEditSection}.json`, {
+        const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/page_${currentEditSection}.json`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
         
         if (response.ok) {
-            console.log(`✅ Page "${currentEditSection}" saved to Firebase`);
-        } else {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            console.log(`✅ Page "${currentEditSection}" backed up to Firebase`);
         }
     } catch (error) {
-        console.error('❌ Save failed:', error);
+        console.error('⚠️ Firebase backup failed (not critical):', error);
     }
     
     closeEditModal();
     currentEditSection = null;
 }
 
-// Load saved page content from Firebase
+// Load saved page content from localStorage (and Firebase as fallback)
 async function loadPageContent() {
     try {
-        // Load home content
-        const homeResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/pages/home.json`);
-        if (homeResponse.ok) {
-            const homeData = await homeResponse.json();
-            if (homeData && homeData.content) {
-                const homeContent = document.getElementById('homeContent');
-                if (homeContent) {
-                    homeContent.innerHTML = homeData.content;
-                    console.log('✅ Home content loaded from Firebase');
+        // Try to load home content from localStorage first
+        const homeData = localStorage.getItem('page_home');
+        if (homeData) {
+            try {
+                const parsed = JSON.parse(homeData);
+                if (parsed && parsed.content) {
+                    const homeContent = document.getElementById('homeContent');
+                    if (homeContent) {
+                        homeContent.innerHTML = parsed.content;
+                        console.log('✅ Home content loaded from localStorage');
+                        return;
+                    }
                 }
+            } catch (e) {
+                console.warn('⚠️ Failed to parse home data from localStorage');
             }
         }
         
-        // Load about content
-        const aboutResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/pages/about.json`);
-        if (aboutResponse.ok) {
-            const aboutData = await aboutResponse.json();
-            if (aboutData && aboutData.content) {
-                const aboutContent = document.getElementById('aboutContent');
-                if (aboutContent) {
-                    aboutContent.innerHTML = aboutData.content;
-                    console.log('✅ About content loaded from Firebase');
+        // Try to load home from Firebase as fallback
+        try {
+            const homeResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/page_home.json`);
+            if (homeResponse.ok) {
+                const homeData = await homeResponse.json();
+                if (homeData && homeData.content) {
+                    const homeContent = document.getElementById('homeContent');
+                    if (homeContent) {
+                        homeContent.innerHTML = homeData.content;
+                        console.log('✅ Home content loaded from Firebase backup');
+                    }
                 }
             }
+        } catch (error) {
+            // Silent fail - not critical
+        }
+        
+        // Try to load about content from localStorage first
+        const aboutData = localStorage.getItem('page_about');
+        if (aboutData) {
+            try {
+                const parsed = JSON.parse(aboutData);
+                if (parsed && parsed.content) {
+                    const aboutContent = document.getElementById('aboutContent');
+                    if (aboutContent) {
+                        aboutContent.innerHTML = parsed.content;
+                        console.log('✅ About content loaded from localStorage');
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ Failed to parse about data from localStorage');
+            }
+        }
+        
+        // Try to load about from Firebase as fallback
+        try {
+            const aboutResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/page_about.json`);
+            if (aboutResponse.ok) {
+                const aboutData = await aboutResponse.json();
+                if (aboutData && aboutData.content) {
+                    const aboutContent = document.getElementById('aboutContent');
+                    if (aboutContent) {
+                        aboutContent.innerHTML = aboutData.content;
+                        console.log('✅ About content loaded from Firebase backup');
+                    }
+                }
+            }
+        } catch (error) {
+            // Silent fail - not critical
         }
     } catch (error) {
-        console.error('⚠️ Failed to load page content from Firebase:', error);
-        // This is not critical - pages will show default content if Firebase is unavailable
+        console.error('⚠️ Failed to load page content:', error);
+        // Pages will show default content if all methods fail
     }
 }
 
