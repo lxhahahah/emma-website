@@ -79,7 +79,6 @@ async function submitBlogPost(e) {
     const title = document.getElementById('postTitle').value.trim();
     const emoji = document.getElementById('postEmoji').value.trim() || '📝';
     const category = document.getElementById('postCategory')?.value || 'tech';
-    const excerpt = document.getElementById('postExcerpt').value.trim();
     const content = document.getElementById('postContent').value.trim();
     const tagsInput = document.getElementById('postTags').value.trim();
     
@@ -97,7 +96,7 @@ async function submitBlogPost(e) {
         title,
         emoji,
         category,
-        excerpt: excerpt || content.substring(0, 100),
+        excerpt: content.substring(0, 100),
         content,
         tags: tagsInput.split(',').map(t => t.trim()).filter(t => t),
         date: timestamp,
