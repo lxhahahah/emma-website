@@ -1,32 +1,11 @@
-// Firebase Configuration
+// Firebase Configuration (using REST API - no SDK needed)
 const firebaseConfig = {
-    apiKey: "AIzaSyAWZ0RbDjd6ZKPPVIcmbYYQbAGgqIddC9o",
-    authDomain: "emma-home-debc4.firebaseapp.com",
-    projectId: "emma-home-debc4",
-    storageBucket: "emma-home-debc4.firebasestorage.app",
-    messagingSenderId: "136720026127",
-    appId: "1:136720026127:web:aa51fc64d6d023569a317a",
-    measurementId: "G-VYSJV2RGJN"
+    projectId: "emma-home-debc4"
 };
 
 // Initialize Firebase
-let firebaseInitialized = false;
-try {
-    if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
-        firebase.initializeApp(firebaseConfig);
-        firebaseInitialized = true;
-    }
-    if (firebaseInitialized) {
-        window.database = firebase.database();
-        window.firebaseEnabled = true;
-        console.log('✅ Firebase 初始化成功');
-    } else {
-        throw new Error('Firebase SDK not loaded');
-    }
-} catch (error) {
-    console.warn('⚠️ Firebase 初始化失败:', error);
-    window.firebaseEnabled = false;
-}
+window.firebaseEnabled = true;
+console.log('✅ Firebase REST API 已初始化，无需 SDK');
 
 // Blog data - stored locally, can be synced with Firebase
 let blogPosts = [
@@ -474,6 +453,12 @@ function deleteCurrentArticle() {
     if (confirm(`确定要删除文章 "${post.title}" 吗？`)) {
         blogPosts = blogPosts.filter(p => p.id !== currentArticleId);
         saveBlogPostsLocally();
+        
+        // Also delete from Firebase
+        if (window.firebaseRestReady) {
+            deleteArticleFromFirebase(currentArticleId);
+        }
+        
         showSuccessMessage('文章已删除');
         
         setTimeout(() => {
@@ -482,50 +467,42 @@ function deleteCurrentArticle() {
     }
 }
 
-// Firebase storage functions
+// Firebase REST API storage functions
+// These functions are now handled by firebase-rest.js
+
 function saveBlogPostToFirebase(post) {
-    if (!window.database) return;
-    
-    try {
-        window.database.ref('posts/' + post.id).set({
-            title: post.title,
-            date: post.date,
-            emoji: post.emoji,
-            excerpt: post.excerpt,
-            content: post.content,
-            tags: post.tags,
-            category: post.category,
-            timestamp: Date.now()
-        });
-        console.log('文章已保存到 Firebase');
-    } catch (error) {
-        console.error('保存到 Firebase 失败:', error);
+    // Use the REST API function from firebase-rest.js
+    if (window.firebaseRestReady) {
+        saveBlogPostToFirebase(post);
+    } else {
+        console.log('Firebase REST API not ready, using localStorage');
+        saveBlogPostLocally(post);
     }
 }
 
-function loadBlogPosts() {
-    if (window.firebaseEnabled && window.database) {
-        window.database.ref('posts').on('value', snapshot => {
-            const data = snapshot.val();
-            if (data) {
-                blogPosts = Object.entries(data).map(([key, value]) => ({
-                    id: parseInt(key),
-                    ...value
-                })).sort((a, b) => new Date(b.date) - new Date(a.date));
+async function loadBlogPosts() {
+    if (window.firebaseRestReady) {
+        try {
+            const firebasePosts = await loadBlogPostsFromFirebase();
+            if (firebasePosts.length > 0) {
+                blogPosts = firebasePosts;
                 renderBlogPosts();
+                return;
             }
-        });
-    } else {
-        // Load from local storage
-        const saved = localStorage.getItem('blogPosts');
-        if (saved) {
-            try {
-                const localPosts = JSON.parse(saved);
-                blogPosts = [...localPosts, ...blogPosts];
-                renderBlogPosts();
-            } catch (e) {
-                console.error('加载本地存储失败:', e);
-            }
+        } catch (error) {
+            console.error('从 Firebase 加载失败，使用本地存储:', error);
+        }
+    }
+    
+    // Fallback to local storage
+    const saved = localStorage.getItem('blogPosts');
+    if (saved) {
+        try {
+            const localPosts = JSON.parse(saved);
+            blogPosts = [...localPosts, ...blogPosts];
+            renderBlogPosts();
+        } catch (e) {
+            console.error('加载本地存储失败:', e);
         }
     }
 }
