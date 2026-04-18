@@ -523,13 +523,16 @@ function generateWordCloud() {
     if (!container || blogPosts.length === 0) return;
     
     const text = blogPosts
-        .map(p => (p.title + ' ' + p.content + ' ' + (p.tags || []).join(' ')).toLowerCase())
+        .map(p => (p.title + ' ' + (p.tags || []).join(' ')).toLowerCase())
         .join(' ');
     
-    const words = text.match(/[\u4e00-\u9fa5]+|[a-z]+/gi) || [];
+    // Extract only single words, not entire phrases
+    const words = text.match(/[\u4e00-\u9fa5]{1,3}|[a-z]{2,8}/gi) || [];
+    
     const stopWords = new Set([
         'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'is', 'are', 'was', 'were',
-        '的', '了', '是', '在', '我', '你', '他', '一', '有', '个', '这', '那', '不', '如', '和'
+        'i', 'me', 'my', 'we', 'you', 'he', 'she', 'it', 'that', 'this', 'as', 'be', 'by', 'do', 'go', 'he', 'if',
+        '的', '了', '是', '在', '我', '你', '他', '一', '有', '个', '这', '那', '不', '如', '和', '也', '都', '可以'
     ]);
     
     const freq = {};
@@ -539,9 +542,10 @@ function generateWordCloud() {
         }
     });
     
+    // Only take top 3-4 keywords
     const sorted = Object.entries(freq)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 30);
+        .slice(0, 4);
     
     if (sorted.length === 0) {
         container.innerHTML = '';
@@ -554,11 +558,11 @@ function generateWordCloud() {
     
     container.innerHTML = sorted.map(([word, count]) => {
         const ratio = (count - minFreq) / range;
-        const size = 12 + ratio * 20;
-        const opacity = 0.5 + ratio * 0.5;
-        return `<span style="font-size: ${size}px; opacity: ${opacity}; margin: 8px; cursor: pointer;" 
+        const size = 18 + ratio * 24;
+        const opacity = 0.7 + ratio * 0.3;
+        return `<span style="font-size: ${size}px; opacity: ${opacity}; margin: 12px; cursor: pointer; font-weight: 600;" 
                       onclick="document.getElementById('searchInput').value='${word}'; applyFilters();">
-                    ${word}(${count})
+                    ${word}
                 </span>`;
     }).join('');
 }
