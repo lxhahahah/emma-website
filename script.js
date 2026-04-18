@@ -181,7 +181,7 @@ function showArticleDetail(postId) {
     document.getElementById('articleContent').innerHTML = formatContent(post.content);
     
     // Render tags
-    const tagsHtml = post.tags.map(tag => 
+    const tagsHtml = (post.tags || []).map(tag => 
         `<span class="article-tag">#${tag}</span>`
     ).join('');
     document.getElementById('articleTags').innerHTML = tagsHtml;
@@ -429,11 +429,11 @@ function editCurrentArticle() {
     
     // Fill the form with current article data
     document.getElementById('postTitle').value = post.title;
-    document.getElementById('postEmoji').value = post.emoji;
+    document.getElementById('postEmoji').value = post.emoji || '📝';
     document.getElementById('postContent').value = post.content;
-    document.getElementById('postExcerpt').value = post.excerpt;
-    document.getElementById('postTags').value = post.tags.join(', ');
-    document.getElementById('postCategory').value = post.category;
+    document.getElementById('postExcerpt').value = post.excerpt || '';
+    document.getElementById('postTags').value = (post.tags || []).join(', ');
+    document.getElementById('postCategory').value = post.category || '';
     
     // Delete the old post
     blogPosts = blogPosts.filter(p => p.id !== currentArticleId);
