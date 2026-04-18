@@ -223,29 +223,28 @@ async function loadPageContent() {
                     if (homeContent) {
                         homeContent.innerHTML = parsed.content;
                         console.log('✅ Home content loaded from localStorage');
-                        return;
                     }
                 }
             } catch (e) {
                 console.warn('⚠️ Failed to parse home data from localStorage');
             }
-        }
-        
-        // Try to load home from Firebase as fallback
-        try {
-            const homeResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/page_home.json`);
-            if (homeResponse.ok) {
-                const homeData = await homeResponse.json();
-                if (homeData && homeData.content) {
-                    const homeContent = document.getElementById('homeContent');
-                    if (homeContent) {
-                        homeContent.innerHTML = homeData.content;
-                        console.log('✅ Home content loaded from Firebase backup');
+        } else {
+            // Try to load home from Firebase as fallback
+            try {
+                const homeResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/page_home.json`);
+                if (homeResponse.ok) {
+                    const homeData = await homeResponse.json();
+                    if (homeData && homeData.content) {
+                        const homeContent = document.getElementById('homeContent');
+                        if (homeContent) {
+                            homeContent.innerHTML = homeData.content;
+                            console.log('✅ Home content loaded from Firebase backup');
+                        }
                     }
                 }
+            } catch (error) {
+                // Silent fail - not critical
             }
-        } catch (error) {
-            // Silent fail - not critical
         }
         
         // Try to load about content from localStorage first
@@ -258,29 +257,28 @@ async function loadPageContent() {
                     if (aboutContent) {
                         aboutContent.innerHTML = parsed.content;
                         console.log('✅ About content loaded from localStorage');
-                        return;
                     }
                 }
             } catch (e) {
                 console.warn('⚠️ Failed to parse about data from localStorage');
             }
-        }
-        
-        // Try to load about from Firebase as fallback
-        try {
-            const aboutResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/page_about.json`);
-            if (aboutResponse.ok) {
-                const aboutData = await aboutResponse.json();
-                if (aboutData && aboutData.content) {
-                    const aboutContent = document.getElementById('aboutContent');
-                    if (aboutContent) {
-                        aboutContent.innerHTML = aboutData.content;
-                        console.log('✅ About content loaded from Firebase backup');
+        } else {
+            // Try to load about from Firebase as fallback
+            try {
+                const aboutResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts/page_about.json`);
+                if (aboutResponse.ok) {
+                    const aboutData = await aboutResponse.json();
+                    if (aboutData && aboutData.content) {
+                        const aboutContent = document.getElementById('aboutContent');
+                        if (aboutContent) {
+                            aboutContent.innerHTML = aboutData.content;
+                            console.log('✅ About content loaded from Firebase backup');
+                        }
                     }
                 }
+            } catch (error) {
+                // Silent fail - not critical
             }
-        } catch (error) {
-            // Silent fail - not critical
         }
     } catch (error) {
         console.error('⚠️ Failed to load page content:', error);
