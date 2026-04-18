@@ -27,12 +27,16 @@
         <main class="main-content">
             <!-- Home Section -->
             <section id="home" class="section active">
+                <div class="page-edit-button" style="position: absolute; top: 20px; right: 20px;">
+                    <button class="btn btn-edit-icon" onclick="toggleEditMode('home')" title="Edit Home Page">✏️</button>
+                </div>
+                
                 <div class="hero">
                     <div class="hero-avatar">✨</div>
                     <h1 class="hero-title">Hi, I'm Emma</h1>
                     <p class="hero-subtitle">Welcome to my space</p>
                     
-                    <div id="homeContent" class="hero-content" style="text-align: center; line-height: 1.8; margin: 20px 0;">
+                    <div id="homeContent" class="hero-content">
                         <div class="about-card-home">
                             <div class="about-item">
                                 <span class="emoji">🇩🇪</span>
@@ -48,8 +52,6 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <button class="btn btn-edit" onclick="toggleEditMode('home')" style="margin-top: 20px;">✏️ Edit Home</button>
 
                     <div class="hero-buttons">
                         <button class="btn btn-primary" onclick="scrollToSection('about')">了解更多</button>
@@ -60,13 +62,16 @@
 
             <!-- About Section -->
             <section id="about" class="section">
+                <div class="page-edit-button" style="position: absolute; top: 20px; right: 20px;">
+                    <button class="btn btn-edit-icon" onclick="toggleEditMode('about')" title="Edit About Page">✏️</button>
+                </div>
+                
                 <div class="section-header">
                     <h2>👤 About Me</h2>
                     <div class="section-line"></div>
-                    <button class="btn btn-edit" onclick="toggleEditMode('about')">✏️ Edit</button>
                 </div>
                 
-                <div id="aboutContent" class="about-grid" style="text-align: center;">
+                <div id="aboutContent" class="about-grid">
                     <div class="about-main">
                         <h3>Hi, I'm Emma ✨</h3>
                         <p>Living in Germany 🇩🇪</p>
