@@ -10,11 +10,19 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+let firebaseInitialized = false;
 try {
-    firebase.initializeApp(firebaseConfig);
-    window.database = firebase.database();
-    window.firebaseEnabled = true;
-    console.log('✅ Firebase 初始化成功');
+    if (typeof firebase !== 'undefined' && firebase.apps.length === 0) {
+        firebase.initializeApp(firebaseConfig);
+        firebaseInitialized = true;
+    }
+    if (firebaseInitialized) {
+        window.database = firebase.database();
+        window.firebaseEnabled = true;
+        console.log('✅ Firebase 初始化成功');
+    } else {
+        throw new Error('Firebase SDK not loaded');
+    }
 } catch (error) {
     console.warn('⚠️ Firebase 初始化失败:', error);
     window.firebaseEnabled = false;
