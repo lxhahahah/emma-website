@@ -410,14 +410,9 @@ function submitBlogPost() {
     renderBlogPosts();
     generateWordCloud();
     
-    // Reset form and show success message
+    // Reset form and show success modal
     document.getElementById('writeForm').reset();
-    showSuccessMessage('文章已发布！');
-    
-    // Redirect to blog section after 2 seconds
-    setTimeout(() => {
-        scrollToSection('blog');
-    }, 2000);
+    showPublishSuccessModal(newPost.title);
 }
 
 // Edit and Delete functions
@@ -439,8 +434,8 @@ function editCurrentArticle() {
     blogPosts = blogPosts.filter(p => p.id !== currentArticleId);
     saveBlogPostsLocally();
     
-    // Scroll to write section
-    scrollToSection('write');
+    // Scroll to blog section to show edited form
+    scrollToSection('blog');
     showSuccessMessage('已加载文章到编辑器，修改后可重新发布');
 }
 
@@ -549,4 +544,78 @@ function showSuccessMessage(message) {
         div.style.animation = 'slideIn 0.3s ease reverse';
         setTimeout(() => div.remove(), 300);
     }, 3000);
+}
+
+// Publish Success Modal
+function showPublishSuccessModal(title) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10001;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        max-width: 400px;
+        animation: slideUp 0.3s ease;
+    `;
+    
+    content.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+        <h2 style="margin: 0 0 10px 0; color: #333; font-size: 24px;">发布成功！</h2>
+        <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">文章已发布到博客</p>
+        <p style="margin: 0 0 30px 0; color: #999; font-size: 13px; word-break: break-word;">《${title}》</p>
+        <button onclick="this.closest('[role=dialog]').remove()" style="
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #E8A0C1, #FFB6D9);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            查看博客
+        </button>
+    `;
+    
+    content.setAttribute('role', 'dialog');
+    modal.appendChild(content);
+    
+    // Add animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(modal);
+    
+    // Auto close after 4 seconds
+    setTimeout(() => {
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => modal.remove(), 300);
+    }, 4000);
 }

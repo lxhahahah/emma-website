@@ -864,3 +864,41 @@ body {
         flex-direction: column;
     }
 }
+
+/* Blog Section Wrapper - Two Column Layout */
+.blog-section-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.write-form-wrapper {
+    grid-column: 1 / -1;
+    background: #f9f9f9;
+    padding: 30px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.write-form-wrapper h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 18px;
+}
+
+.blog-list-wrapper {
+    grid-column: 1 / -1;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .blog-section-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .write-form-wrapper {
+        grid-column: 1;
+        margin-bottom: 30px;
+    }
+}
