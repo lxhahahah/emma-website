@@ -56,29 +56,37 @@ function formatDateWithTime(dateTimeString) {
 }
 
 // ========== MODAL FUNCTIONS ==========
+// Simple modal functions
 function openWriteArticleModal() {
-    document.getElementById('writeArticleModal').style.display = 'flex';
-    document.body.style.overflow = 'hidden';
+    const modal = document.getElementById('writeArticleModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        console.log('✅ Modal opened');
+    } else {
+        console.error('❌ Modal element not found!');
+    }
 }
 
 function closeWriteArticleModal() {
-    document.getElementById('writeArticleModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-    document.getElementById('writeForm').reset();
+    const modal = document.getElementById('writeArticleModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        document.getElementById('writeForm').reset();
+        console.log('✅ Modal closed');
+    }
 }
 
 // Close modal when clicking outside
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('writeArticleModal');
-    if (event.target === modal) {
+    if (modal && event.target === modal) {
         closeWriteArticleModal();
     }
 });
 
-// ========== FORM SUBMISSION ==========
-function submitBlogPost() {
-    const title = document.getElementById('postTitle').value;
-    const emoji = document.getElementById('postEmoji').value || '📝';
+console.log('✅ Modal functions loaded');
     const content = document.getElementById('postContent').value;
     const excerpt = document.getElementById('postExcerpt').value;
     const tagsInput = document.getElementById('postTags').value;
