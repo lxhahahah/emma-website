@@ -375,18 +375,22 @@ function renderArticlesList() {
         return;
     }
     
-    container.innerHTML = filteredPosts.map(post => `
-        <div class="article-list-item" onclick="window.location.hash='#post-${post.id}'">
-            <div class="article-emoji">${post.emoji || '📝'}</div>
-            <div class="article-info">
-                <h3 class="article-title">${post.title}</h3>
-                <div class="article-meta">
-                    <span class="article-date">${post.date}</span>
-                    <span class="article-category">${categoryMap[post.category] || 'Other'}</span>
-                </div>
-            </div>
+    container.innerHTML = `
+        <div class="articles-table-header">
+            <div class="articles-table-emoji">Icon</div>
+            <div class="articles-table-title">Title</div>
+            <div class="articles-table-date">Date</div>
+            <div class="articles-table-category">Category</div>
         </div>
-    `).join('');
+        ${filteredPosts.map(post => `
+            <div class="articles-table-row" onclick="window.location.hash='#post-${post.id}'" style="cursor: pointer;">
+                <div class="articles-table-emoji">${post.emoji || '📝'}</div>
+                <div class="articles-table-title">${post.title}</div>
+                <div class="articles-table-date">${post.date}</div>
+                <div class="articles-table-category"><span class="category-badge">${categoryMap[post.category] || 'Other'}</span></div>
+            </div>
+        `).join('')}
+    `;
 }
 
 function showArticleDetail(postId) {
