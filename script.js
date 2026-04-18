@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     setupWriteForm();
     initializeQuillEditor();
+    loadPageContent(); // Load saved Home/About content
     loadBlogPosts();
     handleHashChange();
     window.addEventListener('hashchange', handleHashChange);
@@ -171,7 +172,7 @@ async function saveEditedContent() {
         originalContent.innerHTML = editedContent;
     }
     
-    // Save to Firebase
+    // Save to Firebase with PUT method to specific path
     try {
         const data = {
             section: currentEditSection,
@@ -179,19 +180,57 @@ async function saveEditedContent() {
             timestamp: new Date().toISOString()
         };
         
-        await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/pages.json`, {
-            method: 'POST',
+        const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/pages/${currentEditSection}.json`, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
         
-        console.log('✅ Content saved to Firebase');
+        if (response.ok) {
+            console.log(`✅ Page "${currentEditSection}" saved to Firebase`);
+        } else {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
     } catch (error) {
         console.error('❌ Save failed:', error);
     }
     
     closeEditModal();
     currentEditSection = null;
+}
+
+// Load saved page content from Firebase
+async function loadPageContent() {
+    try {
+        // Load home content
+        const homeResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/pages/home.json`);
+        if (homeResponse.ok) {
+            const homeData = await homeResponse.json();
+            if (homeData && homeData.content) {
+                const homeContent = document.getElementById('homeContent');
+                if (homeContent) {
+                    homeContent.innerHTML = homeData.content;
+                    console.log('✅ Home content loaded from Firebase');
+                }
+            }
+        }
+        
+        // Load about content
+        const aboutResponse = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/pages/about.json`);
+        if (aboutResponse.ok) {
+            const aboutData = await aboutResponse.json();
+            if (aboutData && aboutData.content) {
+                const aboutContent = document.getElementById('aboutContent');
+                if (aboutContent) {
+                    aboutContent.innerHTML = aboutData.content;
+                    console.log('✅ About content loaded from Firebase');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('⚠️ Failed to load page content from Firebase:', error);
+        // This is not critical - pages will show default content if Firebase is unavailable
+    }
 }
 
 // ==================== BLOG FUNCTIONS ====================
