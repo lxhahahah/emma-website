@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emma's Space</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-brand">✨ Emma's Space</div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active" data-section="home">首页</a></li>
+                <li><a href="#about" class="nav-link" data-section="about">关于</a></li>
+                <li><a href="#blog" class="nav-link" data-section="blog">博客</a></li>
+                <li><a href="#write" class="nav-link" data-section="write">写文章</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Home Section -->
+            <section id="home" class="section active">
+                <div class="hero">
+                    <div class="hero-avatar">✨</div>
+                    <h1 class="hero-title">Hi, I'm Emma</h1>
+                    <p class="hero-subtitle">Welcome to my space</p>
+                    
+                    <div class="about-card-home">
+                        <div class="about-item">
+                            <span class="emoji">🇩🇪</span>
+                            <span>Living in Germany</span>
+                        </div>
+                        <div class="about-item">
+                            <span class="emoji">📚</span>
+                            <span>Learning German C1 level</span>
+                        </div>
+                        <div class="about-item">
+                            <span class="emoji">🎯</span>
+                            <span>Preparing for Telc C1 HS & IELTS</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary" onclick="scrollToSection('about')">了解更多</button>
+                        <button class="btn btn-secondary" onclick="scrollToSection('blog')">查看博客</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Section -->
+            <section id="about" class="section">
+                <div class="section-header">
+                    <h2>👤 About Me</h2>
+                    <div class="section-line"></div>
+                </div>
+                
+                <div class="about-grid">
+                    <div class="about-main">
+                        <h3>Hi, I'm Emma ✨</h3>
+                        <p>Living in Germany 🇩🇪</p>
+
+                        <div class="about-section">
+                            <h4>🚀 What I'm Doing</h4>
+                            <ul class="about-list">
+                                <li>📚 Learning German C1 level</li>
+                                <li>🎯 Preparing for Telc C1 HS</li>
+                                <li>🎯 Preparing for IELTS</li>
+                            </ul>
+                        </div>
+
+                        <div class="about-section">
+                            <h4>💖 My Interests</h4>
+                            <ul class="about-list">
+                                <li>🎨 Painting</li>
+                                <li>🧘‍♀️ Yoga / Pilates</li>
+                                <li>☕️ Coffee & Latte Art</li>
+                                <li>🐱 Mömö & duoduo 🐱</li>
+                                <li>📑 Keep learning</li>
+                            </ul>
+                        </div>
+
+                        <div class="about-section">
+                            <h4>📬 Contact</h4>
+                            <div class="contact-info">
+                                <a href="mailto:emmaliu8023@gmail.com" class="contact-link">
+                                    📧 emmaliu8023@gmail.com
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Blog Section -->
+            <section id="blog" class="section">
+                <div class="section-header">
+                    <h2>最新博客</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <!-- Filter and Tag Section -->
+                <div class="blog-filter">
+                    <div class="filter-group">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="搜索文章..." 
+                            class="search-box"
+                        >
+                    </div>
+                    <div class="tags-container" id="tagsContainer">
+                        <!-- Tags will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Word Cloud -->
+                <div class="word-cloud-container">
+                    <h3>📊 关键词云</h3>
+                    <div class="word-cloud" id="wordCloud">
+                        <!-- Word cloud will be generated here -->
+                    </div>
+                </div>
+
+                <div class="blog-grid" id="blogGrid">
+                    <!-- Blog posts will be inserted here by JavaScript -->
+                </div>
+
+                <div class="blog-empty" id="blogEmpty" style="display: none;">
+                    <div class="empty-icon">📝</div>
+                    <p>还没有发布博客文章，敬请期待！</p>
+                </div>
+            </section>
+
+            <!-- Article Detail Section -->
+            <section id="article-detail" class="section">
+                <div class="article-back-button">
+                    <button class="btn btn-secondary" onclick="goBackToBlog()">← 返回博客</button>
+                </div>
+                <article class="article-detail">
+                    <header class="article-header">
+                        <h1 id="articleTitle">文章标题</h1>
+                        <div class="article-meta">
+                            <span id="articleDate" class="article-date">日期</span>
+                            <div id="articleTags" class="article-tags">
+                                <!-- Tags will be inserted here -->
+                            </div>
+                        </div>
+                    </header>
+                    <div id="articleContent" class="article-content">
+                        <!-- Article content will be inserted here -->
+                    </div>
+                    <footer class="article-footer">
+                        <div class="article-actions">
+                            <button class="btn btn-primary" onclick="editCurrentArticle()">编辑</button>
+                            <button class="btn btn-danger" onclick="deleteCurrentArticle()">删除</button>
+                        </div>
+                    </footer>
+                </article>
+            </section>
+
+            <!-- Write Section -->
+            <section id="write" class="section">
+                <div class="section-header">
+                    <h2>✍️ 写文章</h2>
+                    <div class="section-line"></div>
+                </div>
+
+                <div class="write-container">
+                    <form id="writeForm" class="write-form">
+                        <div class="form-group">
+                            <label for="postTitle">文章标题</label>
+                            <input 
+                                type="text" 
+                                id="postTitle" 
+                                placeholder="输入文章标题..." 
+                                required
+                                maxlength="100"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="postEmoji">表情符号 (可选)</label>
+                            <input 
+                                type="text" 
+                                id="postEmoji" 
+                                placeholder="选择一个表情符号，如: 🎨" 
+                                maxlength="2"
+                                value="📝"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="postContent">文章内容</label>
+                            <textarea 
+                                id="postContent" 
+                                placeholder="开始写你的文章..." 
+                                required
+                                rows="12"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="postTags">标签 (用逗号分隔)</label>
+                            <input 
+                                type="text" 
+                                id="postTags" 
+                                placeholder="例如: 学习, 技术, 生活"
+                                maxlength="200"
+                            >
+                        </div>
+
+                        <div class="form-group">
+                            <label for="postCategory">分组</label>
+                            <select id="postCategory">
+                                <option value="">选择分组...</option>
+                                <option value="learning">📚 学习</option>
+                                <option value="life">🌟 生活</option>
+                                <option value="tech">💻 技术</option>
+                                <option value="thoughts">💭 思考</option>
+                                <option value="travel">✈️ 旅行</option>
+                            </select>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">发布文章</button>
+                            <button type="reset" class="btn btn-secondary">清空</button>
+                        </div>
+                    </form>
+
+                    <div class="write-info">
+                        <h3>💡 小贴士</h3>
+                        <ul>
+                            <li>标题应该清晰而吸引人</li>
+                            <li>表情符号可以让文章更生动</li>
+                            <li>文章会自动保存到 Firebase（确保已连接）</li>
+                            <li>发布后会出现在博客列表中</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 Emma's Space | Made with ❤️</p>
+                <div class="social-links">
+                    <a href="mailto:emmaliu8023@gmail.com" class="social-link">Email</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试提交</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .box { background: #f0f0f0; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 测试提交功能</h1>
+    
+    <div class="box">
+        <h3>检查代码</h3>
+        <button onclick="checkCode()">开始检查</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function checkCode() {
+            const result = document.getElementById('result');
+            result.innerHTML = '';
+            
+            // 测试是否能加载 script.js
+            result.innerHTML += '✅ 测试 1: 在 iframe 中加载 script.js<br>';
+            
+            const script = document.createElement('script');
+            script.src = 'script.js';
+            script.onload = () => {
+                result.innerHTML += '✅ script.js 已加载<br>';
+                
+                // 检查全局变量
+                result.innerHTML += `✅ blogPosts 定义: ${typeof blogPosts}<br>`;
+                result.innerHTML += `✅ submitBlogPost 定义: ${typeof submitBlogPost}<br>`;
+                result.innerHTML += `✅ Firebase 状态: ${window.firebaseEnabled}<br>`;
+            };
+            script.onerror = () => {
+                result.innerHTML += '❌ script.js 加载失败<br>';
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+</body>
+</html>

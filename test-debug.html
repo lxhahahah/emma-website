@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>发布文章调试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+        }
+        button {
+            background: #E8A0C1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #d48aad;
+        }
+        .output {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .warning { color: orange; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 发布文章调试工具</h1>
+        
+        <div class="test-section">
+            <h3>1️⃣ 检查表单元素</h3>
+            <button onclick="checkFormElements()">检查表单</button>
+            <div id="formCheck" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2️⃣ 检查事件监听</h3>
+            <button onclick="checkEventListeners()">检查事件</button>
+            <div id="eventCheck" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3️⃣ 检查 Firebase 状态</h3>
+            <button onclick="checkFirebase()">检查 Firebase</button>
+            <div id="firebaseCheck" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4️⃣ 测试提交文章</h3>
+            <button onclick="testSubmit()">测试提交</button>
+            <div id="submitTest" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>5️⃣ 浏览器控制台日志</h3>
+            <button onclick="showConsoleLogs()">显示日志</button>
+            <div id="consoleLogs" class="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const consoleLogs = [];
+        
+        // 拦截 console 输出
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.log = function(...args) {
+            consoleLogs.push({ type: 'log', msg: args.join(' ') });
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            consoleLogs.push({ type: 'error', msg: args.join(' ') });
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            consoleLogs.push({ type: 'warn', msg: args.join(' ') });
+            originalWarn.apply(console, args);
+        };
+
+        function log(element, text, type = 'log') {
+            const output = document.getElementById(element);
+            const className = type === 'error' ? 'error' : type === 'warn' ? 'warning' : 'success';
+            output.innerHTML += `<span class="${className}">${text}</span>\n`;
+        }
+
+        function checkFormElements() {
+            const output = document.getElementById('formCheck');
+            output.innerHTML = '';
+            
+            const form = document.getElementById('writeForm');
+            if (!form) {
+                log('formCheck', '❌ 表单 #writeForm 未找到', 'error');
+                return;
+            }
+            log('formCheck', '✅ 表单 #writeForm 已找到', 'success');
+            
+            const elements = [
+                'postTitle',
+                'postEmoji',
+                'postContent',
+                'postExcerpt',
+                'postTags',
+                'postCategory'
+            ];
+            
+            elements.forEach(id => {
+                const elem = document.getElementById(id);
+                if (elem) {
+                    log('formCheck', `✅ 字段 #${id} 已找到`, 'success');
+                } else {
+                    log('formCheck', `❌ 字段 #${id} 未找到`, 'error');
+                }
+            });
+        }
+
+        function checkEventListeners() {
+            const output = document.getElementById('eventCheck');
+            output.innerHTML = '';
+            
+            const form = document.getElementById('writeForm');
+            if (!form) {
+                log('eventCheck', '❌ 表单未找到', 'error');
+                return;
+            }
+            
+            log('eventCheck', 'ℹ️ 尝试触发表单 submit 事件...', 'log');
+            
+            // 创建一个测试事件
+            const testEvent = new Event('submit', { cancelable: true });
+            let submitted = false;
+            
+            const testListener = (e) => {
+                e.preventDefault();
+                submitted = true;
+                log('eventCheck', '✅ submit 事件已触发', 'success');
+            };
+            
+            form.addEventListener('submit', testListener);
+            form.dispatchEvent(testEvent);
+            
+            if (submitted) {
+                log('eventCheck', '✅ 事件监听正常工作', 'success');
+            } else {
+                log('eventCheck', '⚠️  事件可能被其他监听器阻止', 'warn');
+            }
+            
+            form.removeEventListener('submit', testListener);
+        }
+
+        function checkFirebase() {
+            const output = document.getElementById('firebaseCheck');
+            output.innerHTML = '';
+            
+            if (typeof firebase === 'undefined') {
+                log('firebaseCheck', '❌ Firebase 库未加载', 'error');
+                return;
+            }
+            log('firebaseCheck', '✅ Firebase 库已加载', 'success');
+            
+            if (typeof window.firebaseEnabled === 'undefined') {
+                log('firebaseCheck', '❌ window.firebaseEnabled 未定义', 'error');
+                return;
+            }
+            log('firebaseCheck', `✅ window.firebaseEnabled = ${window.firebaseEnabled}`, 'success');
+            
+            if (window.firebaseEnabled) {
+                if (!window.database) {
+                    log('firebaseCheck', '❌ window.database 未初始化', 'error');
+                } else {
+                    log('firebaseCheck', '✅ Firebase Database 已初始化', 'success');
+                }
+            } else {
+                log('firebaseCheck', 'ℹ️ Firebase 未启用，将使用本地存储', 'log');
+            }
+        }
+
+        function testSubmit() {
+            const output = document.getElementById('submitTest');
+            output.innerHTML = '';
+            
+            // 检查所需函数是否存在
+            if (typeof submitBlogPost === 'undefined') {
+                log('submitTest', '❌ submitBlogPost 函数未定义', 'error');
+                return;
+            }
+            log('submitTest', '✅ submitBlogPost 函数已定义', 'success');
+            
+            if (typeof renderBlogPosts === 'undefined') {
+                log('submitTest', '❌ renderBlogPosts 函数未定义', 'error');
+                return;
+            }
+            log('submitTest', '✅ renderBlogPosts 函数已定义', 'success');
+            
+            if (typeof blogPosts === 'undefined') {
+                log('submitTest', '❌ blogPosts 变量未定义', 'error');
+                return;
+            }
+            log('submitTest', `✅ blogPosts 变量已定义 (当前: ${blogPosts.length} 篇文章)`, 'success');
+            
+            log('submitTest', '✅ 所有要求的函数都已就绪！', 'success');
+            log('submitTest', 'ℹ️ 尝试发布一篇测试文章...', 'log');
+        }
+
+        function showConsoleLogs() {
+            const output = document.getElementById('consoleLogs');
+            output.innerHTML = '';
+            
+            if (consoleLogs.length === 0) {
+                log('consoleLogs', 'ℹ️ 暂无日志', 'log');
+                return;
+            }
+            
+            consoleLogs.forEach(log => {
+                const className = log.type === 'error' ? 'error' : log.type === 'warn' ? 'warning' : 'success';
+                output.innerHTML += `<span class="${className}">[${log.type.toUpperCase()}] ${log.msg}</span>\n`;
+            });
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('load', () => {
+            console.log('调试页面已加载');
+        });
+    </script>
+</body>
+</html>

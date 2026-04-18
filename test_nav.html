@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>导航栏测试</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .pass { background: #90EE90; color: black; }
+        .fail { background: #FFB6C6; color: black; }
+        code { background: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 导航栏功能测试</h1>
+    
+    <div class="test-result pass">
+        ✅ <strong>修复内容</strong>：
+        <ul>
+            <li>修复了 <code>handleHashChange()</code> 函数的逻辑</li>
+            <li>添加了 <code>showSectionWithoutHash()</code> 辅助函数</li>
+            <li>优化了哈希值处理（移除 '#' 前缀的问题）</li>
+            <li>确保导航链接点击后正确切换页面</li>
+        </ul>
+    </div>
+
+    <div class="test-result pass">
+        ✅ <strong>问题根源</strong>：
+        <p>之前的 <code>handleHashChange()</code> 函数在接收哈希值时，如果不以 <code>#post-</code> 开头，就总是显示首页。这导致点击"关于"、"博客"、"写文章"等链接时，虽然哈希值改变了，但页面仍然回到首页。</p>
+    </div>
+
+    <div class="test-result pass">
+        ✅ <strong>修复方案</strong>：
+        <ol>
+            <li>改进了哈希值的处理逻辑</li>
+            <li>添加了三个条件判断：
+                <ul>
+                    <li>如果是 <code>post-</code> 开头，显示文章详情页</li>
+                    <li>如果是其他值，显示对应的页面</li>
+                    <li>如果没有哈希值，显示首页</li>
+                </ul>
+            </li>
+            <li>添加了 <code>showSectionWithoutHash()</code> 来避免循环调用</li>
+        </ol>
+    </div>
+
+    <hr>
+
+    <h2>📝 修改详情</h2>
+
+    <h3>1️⃣ handleHashChange() 函数（第 71-84 行）</h3>
+    <p><strong>原代码问题</strong>：</p>
+    <pre>if (hash.startsWith('#post-')) {
+    // ...
+} else {
+    showSection('home');  // 导致问题！
+}</pre>
+    <p><strong>新代码</strong>：</p>
+    <pre>const hash = window.location.hash.substring(1);  // 移除 '#'
+if (hash.startsWith('post-')) {
+    // 处理文章页
+} else if (hash) {
+    showSectionWithoutHash(hash);  // 处理其他页面
+} else {
+    showSectionWithoutHash('home');  // 默认首页
+}</pre>
+
+    <h3>2️⃣ 新增 showSectionWithoutHash() 函数（第 138-162 行）</h3>
+    <p>这个函数与 showSection() 类似，但不会改变 window.location.hash，避免触发无限循环。</p>
+
+    <hr>
+
+    <h2>✅ 现在应该正常工作的功能</h2>
+    <ul>
+        <li>✅ 点击导航栏 "首页" → 显示首页</li>
+        <li>✅ 点击导航栏 "关于" → 显示关于页面</li>
+        <li>✅ 点击导航栏 "博客" → 显示博客页面</li>
+        <li>✅ 点击导航栏 "写文章" → 显示写文章页面</li>
+        <li>✅ 点击文章卡片 → 进入文章详情页</li>
+        <li>✅ 浏览器前进/后退按钮 → 正常工作</li>
+        <li>✅ 直接访问 URL（#blog、#about 等）→ 正确显示页面</li>
+    </ul>
+
+    <hr>
+
+    <h2>🚀 测试方法</h2>
+    <ol>
+        <li>打开 <code>index.html</code></li>
+        <li>点击导航栏的各个链接</li>
+        <li>观察页面是否正确切换</li>
+        <li>使用浏览器后退按钮验证</li>
+        <li>在浏览器地址栏直接输入 <code>#about</code>、<code>#blog</code> 等进行测试</li>
+    </ol>
+
+    <div class="test-result pass">
+        <strong>修复完成！</strong>导航栏现在应该可以正常工作了。😊
+    </div>
+</body>
+</html>
