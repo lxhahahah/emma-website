@@ -98,122 +98,156 @@
             <!-- Blog Section -->
             <section id="blog" class="section">
                 <div class="section-header">
-                    <h2>最新博客</h2>
+                    <h2>Latest Articles</h2>
                     <div class="section-line"></div>
                 </div>
 
-                <!-- Two Column Layout: Write Form + Blog List -->
-                <div class="blog-section-wrapper">
-                    <!-- Left: Write Form (Full Width) -->
-                    <div class="write-form-wrapper">
-                        <h3>✍️ 写文章</h3>
+                <!-- Write Article Button -->
+                <div class="blog-action-bar">
+                    <button class="btn btn-primary btn-large" onclick="openWriteArticleModal()">✍️ Write Article</button>
+                </div>
+
+                <!-- Filtering Section -->
+                <div class="blog-controls">
+                    <!-- Search -->
+                    <div class="control-group">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Search articles..." 
+                            class="search-box"
+                        >
+                    </div>
+
+                    <!-- Sort -->
+                    <div class="control-group">
+                        <select id="sortSelect" class="filter-select" onchange="applyFilters()">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                        </select>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="control-group">
+                        <select id="categorySelect" class="filter-select" onchange="applyFilters()">
+                            <option value="">All Categories</option>
+                            <option value="learning">📚 Learning</option>
+                            <option value="life">🌟 Life</option>
+                            <option value="tech">💻 Tech</option>
+                            <option value="thoughts">💭 Thoughts</option>
+                            <option value="travel">✈️ Travel</option>
+                        </select>
+                    </div>
+
+                    <!-- Tags Filter -->
+                    <div class="control-group">
+                        <div class="tags-container" id="tagsContainer">
+                            <!-- Tags will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Keyword Cloud -->
+                <div class="word-cloud-container">
+                    <h3>📊 Keyword Cloud</h3>
+                    <div class="word-cloud" id="wordCloud">
+                        <!-- Word cloud will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Articles List -->
+                <div class="articles-list-container">
+                    <div class="articles-list" id="articlesList">
+                        <!-- Articles will be displayed as vertical list here -->
+                    </div>
+
+                    <div class="blog-empty" id="blogEmpty" style="display: none;">
+                        <div class="empty-icon">📝</div>
+                        <p>No articles yet. Start writing!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Write Article Modal -->
+            <div id="writeArticleModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>✍️ Write Article</h2>
+                        <button class="modal-close" onclick="closeWriteArticleModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
                         <form id="writeForm" class="write-form">
                             <div class="form-group">
-                                <label for="postTitle">文章标题</label>
+                                <label for="postTitle">Article Title</label>
                                 <input 
                                     type="text" 
                                     id="postTitle" 
-                                    placeholder="输入文章标题..." 
+                                    placeholder="Enter article title..." 
                                     required
                                     maxlength="100"
                                 >
                             </div>
 
                             <div class="form-group">
-                                <label for="postEmoji">表情符号 (可选)</label>
+                                <label for="postEmoji">Emoji (Optional)</label>
                                 <input 
                                     type="text" 
                                     id="postEmoji" 
-                                    placeholder="选择一个表情符号，如: 🎨" 
+                                    placeholder="Choose an emoji, e.g: 🎨" 
                                     maxlength="2"
                                     value="📝"
                                 >
                             </div>
 
                             <div class="form-group">
-                                <label for="postContent">文章内容</label>
+                                <label for="postContent">Article Content</label>
                                 <textarea 
                                     id="postContent" 
-                                    placeholder="开始写你的文章..." 
+                                    placeholder="Start writing your article..." 
                                     required
                                     rows="12"
                                 ></textarea>
                             </div>
 
                             <div class="form-group">
-                                <label for="postExcerpt">摘要 (可选)</label>
+                                <label for="postExcerpt">Summary (Optional)</label>
                                 <textarea 
                                     id="postExcerpt" 
-                                    placeholder="文章摘要或简介..." 
+                                    placeholder="Article summary or introduction..." 
                                     rows="3"
                                 ></textarea>
                             </div>
 
                             <div class="form-group">
-                                <label for="postTags">标签 (用逗号分隔)</label>
+                                <label for="postTags">Tags (comma separated)</label>
                                 <input 
                                     type="text" 
                                     id="postTags" 
-                                    placeholder="例如: 学习, 技术, 生活"
+                                    placeholder="e.g: learning, tech, life"
                                     maxlength="200"
                                 >
                             </div>
 
                             <div class="form-group">
-                                <label for="postCategory">分组</label>
+                                <label for="postCategory">Category</label>
                                 <select id="postCategory">
-                                    <option value="">选择分组...</option>
-                                    <option value="learning">📚 学习</option>
-                                    <option value="life">🌟 生活</option>
-                                    <option value="tech">💻 技术</option>
-                                    <option value="thoughts">💭 思考</option>
-                                    <option value="travel">✈️ 旅行</option>
+                                    <option value="">Select category...</option>
+                                    <option value="learning">📚 Learning</option>
+                                    <option value="life">🌟 Life</option>
+                                    <option value="tech">💻 Tech</option>
+                                    <option value="thoughts">💭 Thoughts</option>
+                                    <option value="travel">✈️ Travel</option>
                                 </select>
                             </div>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">发布文章</button>
-                                <button type="reset" class="btn btn-secondary">清空</button>
+                                <button type="submit" class="btn btn-primary">Publish</button>
+                                <button type="reset" class="btn btn-secondary">Clear</button>
                             </div>
                         </form>
                     </div>
-
-                    <!-- Right: Blog List -->
-                    <div class="blog-list-wrapper">
-                        <!-- Filter and Tag Section -->
-                        <div class="blog-filter">
-                            <div class="filter-group">
-                                <input 
-                                    type="text" 
-                                    id="searchInput" 
-                                    placeholder="搜索文章..." 
-                                    class="search-box"
-                                >
-                            </div>
-                            <div class="tags-container" id="tagsContainer">
-                                <!-- Tags will be generated here -->
-                            </div>
-                        </div>
-
-                        <!-- Word Cloud -->
-                        <div class="word-cloud-container">
-                            <h3>📊 关键词云</h3>
-                            <div class="word-cloud" id="wordCloud">
-                                <!-- Word cloud will be generated here -->
-                            </div>
-                        </div>
-
-                        <div class="blog-grid" id="blogGrid">
-                            <!-- Blog posts will be inserted here by JavaScript -->
-                        </div>
-
-                        <div class="blog-empty" id="blogEmpty" style="display: none;">
-                            <div class="empty-icon">📝</div>
-                            <p>还没有发布博客文章，敬请期待！</p>
-                        </div>
-                    </div>
                 </div>
-            </section>
+            </div>
 
             <!-- Article Detail Section -->
             <section id="article-detail" class="section">
