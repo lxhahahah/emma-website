@@ -1,322 +1,142 @@
-// Firebase REST API functions are defined in firebase-rest.js
-// Just ensure they exist before using
+// Firebase Configuration (using REST API - no SDK needed)
+const firebaseConfig = {
+    projectId: "emma-home-debc4"
+};
 
-// Blog data - stored locally, can be synced with Firebase
-let blogPosts = [
-    {
-        id: 1,
-        title: '我的第一篇博客',
-        date: '2024-04-17 10:30:00',
-        emoji: '📱',
-        excerpt: '分享我开始写博客的初心和感受',
-        content: '这是我的第一篇博客文章，很高兴在这里和你们分享我的想法和故事...',
-        tags: ['博客', '分享'],
-        category: 'thoughts'
-    },
-    {
-        id: 2,
-        title: 'Web 开发入门指南',
-        date: '2024-04-10 14:15:00',
-        emoji: '🚀',
-        excerpt: '从零开始学习 Web 开发的经验分享',
-        content: 'Web 开发是一个有趣且充满挑战的领域。在这篇文章中，我将分享我的学习经验...',
-        tags: ['技术', '学习'],
-        category: 'tech'
-    },
-    {
-        id: 3,
-        title: '设计思路分享',
-        date: '2024-04-03 09:45:00',
-        emoji: '🎨',
-        excerpt: '个人主页的设计灵感和实现过程',
-        content: '在设计这个个人主页时，我考虑了很多因素。首先是用户体验...',
-        tags: ['设计'],
-        category: 'thoughts'
-    }
-];
+// Initialize Firebase
+window.firebaseEnabled = true;
+console.log('✅ Firebase REST API 已初始化，无需 SDK');
 
-let currentArticleId = null;
+// Blog data
+let blogPosts = [];
 let filteredPosts = [];
-let selectedTag = '';
+let currentArticleId = null;
 
-// ========== TIMESTAMP FUNCTIONS ==========
-function getFullTimestamp() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-}
+const categoryMap = {
+    'learning': '📚 学习',
+    'life': '🌟 生活',
+    'tech': '💻 技术',
+    'thoughts': '💭 思考',
+    'travel': '✈️ 旅行'
+};
 
-function formatDateWithTime(dateTimeString) {
-    return dateTimeString;
-}
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOMContentLoaded triggered');
+    initializeNavigation();
+    setupWriteForm();
+    loadBlogPosts();
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+});
 
-// ========== MODAL FUNCTIONS ==========
-// Simple modal functions
+// ==================== MODAL FUNCTIONS ====================
 function openWriteArticleModal() {
+    console.log('✅ openWriteArticleModal called');
     const modal = document.getElementById('writeArticleModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        console.log('✅ Modal opened');
-    } else {
+    if (!modal) {
         console.error('❌ Modal element not found!');
+        return;
     }
+    
+    // Reset form
+    const form = document.getElementById('writeForm');
+    if (form) form.reset();
+    
+    // Show modal
+    modal.style.display = 'flex';
+    console.log('✅ Modal displayed');
 }
 
 function closeWriteArticleModal() {
+    console.log('✅ closeWriteArticleModal called');
     const modal = document.getElementById('writeArticleModal');
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        document.getElementById('writeForm').reset();
-        console.log('✅ Modal closed');
+    if (!modal) {
+        console.error('❌ Modal element not found!');
+        return;
     }
+    modal.style.display = 'none';
+    console.log('✅ Modal hidden');
 }
 
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('writeArticleModal');
-    if (modal && event.target === modal) {
-        closeWriteArticleModal();
-    }
-});
-
 console.log('✅ Modal functions loaded');
-    const content = document.getElementById('postContent').value;
-    const excerpt = document.getElementById('postExcerpt').value;
-    const tagsInput = document.getElementById('postTags').value;
-    const category = document.getElementById('postCategory').value || 'thoughts';
+
+// ==================== FORM HANDLING ====================
+function setupWriteForm() {
+    const form = document.getElementById('writeForm');
+    if (!form) {
+        console.error('❌ Write form not found!');
+        return;
+    }
+    
+    form.addEventListener('submit', submitBlogPost);
+}
+
+async function submitBlogPost(e) {
+    e.preventDefault();
+    console.log('✅ Form submitted');
+    
+    const title = document.getElementById('postTitle').value.trim();
+    const emoji = document.getElementById('postEmoji').value.trim() || '📝';
+    const category = document.getElementById('postCategory')?.value || 'tech';
+    const excerpt = document.getElementById('postExcerpt').value.trim();
+    const content = document.getElementById('postContent').value.trim();
+    const tagsInput = document.getElementById('postTags').value.trim();
     
     if (!title || !content) {
         alert('Please fill in title and content');
         return;
     }
     
-    const tags = tagsInput
-        .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag);
+    // Create post object with full timestamp
+    const now = new Date();
+    const timestamp = now.toISOString().replace('T', ' ').substring(0, 19); // YYYY-MM-DD HH:MM:SS
     
-    const newPost = {
+    const post = {
         id: Date.now(),
-        title: title,
-        date: getFullTimestamp(),
-        emoji: emoji,
+        title,
+        emoji,
+        category,
         excerpt: excerpt || content.substring(0, 100),
-        content: content,
-        tags: tags,
-        category: category
+        content,
+        tags: tagsInput.split(',').map(t => t.trim()).filter(t => t),
+        date: timestamp,
+        createdAt: now.getTime()
     };
     
-    // Save to Firebase if available
-    if (window.firebaseRestReady) {
-        saveBlogPostToFirebase(newPost);
-    } else {
-        saveBlogPostLocally(newPost);
-    }
+    console.log('📝 New post:', post);
     
-    // Add to blog posts array
-    blogPosts.unshift(newPost);
-    saveBlogPostsLocally();
-    applyFilters();
-    generateWordCloud();
-    
-    // Reset form and show success modal
-    document.getElementById('writeForm').reset();
-    closeWriteArticleModal();
-    showPublishSuccessModal(newPost.title);
-}
-
-// ========== ARTICLE DISPLAY ==========
-function showArticleDetail(postId) {
-    const post = blogPosts.find(p => p.id === postId);
-    if (!post) return;
-    
-    currentArticleId = postId;
-    
-    document.getElementById('articleTitle').textContent = post.title;
-    document.getElementById('articleDate').textContent = formatDateWithTime(post.date);
-    document.getElementById('articleContent').innerHTML = formatContent(post.content);
-    
-    // Render tags
-    const tagsHtml = (post.tags || []).map(tag => 
-        `<span class="article-tag">#${tag}</span>`
-    ).join('');
-    document.getElementById('articleTags').innerHTML = tagsHtml;
-    
-    showSection('article-detail');
-    window.location.hash = `post-${postId}`;
-}
-
-function goBackToBlog() {
-    showSection('blog');
-}
-
-// ========== KEYWORD EXTRACTION ==========
-function generateWordCloud() {
-    if (blogPosts.length === 0) {
-        document.getElementById('wordCloud').innerHTML = '<p>No keywords yet</p>';
-        return;
-    }
-
-    // Combine all article content
-    const allContent = blogPosts.map(post => 
-        (post.title + ' ' + post.content + ' ' + (post.excerpt || '')).toLowerCase()
-    ).join(' ');
-
-    // Common stop words
-    const stopWords = new Set([
-        'the', 'a', 'an', 'and', 'or', 'but', 'is', 'am', 'are', 'was', 'were',
-        'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will',
-        'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that',
-        'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'what',
-        'which', 'who', 'when', 'where', 'why', 'how', 'in', 'on', 'at', 'to',
-        'for', 'of', 'with', 'from', 'by', 'as', 'about', 'into', 'through',
-        'my', 'me', 'your', 'him', 'her', 'its', 'their', 'de', 'la', 'el',
-        '的', '是', '在', '了', '有', '和', '人', '这', '对', '很', '也', '都',
-        '一', '个', '到', '说', '里', '就', '等'
-    ]);
-
-    // Extract words (Chinese + English)
-    const words = allContent.match(/[\u4e00-\u9fa5]+|[a-z]+/gi) || [];
-    
-    // Count frequency
-    const frequency = {};
-    words.forEach(word => {
-        if (!stopWords.has(word.toLowerCase()) && word.length > 1) {
-            frequency[word] = (frequency[word] || 0) + 1;
-        }
-    });
-
-    // Get top words
-    const topWords = Object.entries(frequency)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 30)
-        .map(([word, count]) => ({ word, count }));
-
-    if (topWords.length === 0) {
-        document.getElementById('wordCloud').innerHTML = '<p>No keywords</p>';
-        return;
-    }
-
-    // Find min and max for sizing
-    const counts = topWords.map(w => w.count);
-    const minCount = Math.min(...counts);
-    const maxCount = Math.max(...counts);
-    const range = maxCount - minCount || 1;
-
-    // Generate cloud HTML
-    const cloudHTML = topWords.map(({ word, count }) => {
-        const size = ((count - minCount) / range * 30) + 12;
-        const opacity = ((count - minCount) / range * 0.5) + 0.5;
-        return `<span style="font-size: ${size}px; opacity: ${opacity}; margin: 5px; cursor: pointer;" onclick="filterByKeyword('${word}')">${word}</span>`;
-    }).join('');
-
-    document.getElementById('wordCloud').innerHTML = cloudHTML;
-}
-
-// ========== FILTERING & SORTING ==========
-function applyFilters() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-// ========== FILTERING & SORTING ==========
-function applyFilters() {
-    // Check if elements exist
-    const searchInput = document.getElementById('searchInput');
-    const sortSelect = document.getElementById('sortSelect');
-    const categorySelect = document.getElementById('categorySelect');
-    
-    if (!searchInput || !sortSelect || !categorySelect) {
-        console.warn('Filter elements not yet loaded');
-        return;
-    }
-    
-    const searchTerm = searchInput.value.toLowerCase();
-    const sortOrder = sortSelect.value;
-    const selectedCategory = categorySelect.value;
-
-    // Filter posts
-    filteredPosts = blogPosts.filter(post => {
-        const matchesSearch = !searchTerm || 
-            post.title.toLowerCase().includes(searchTerm) ||
-            post.content.toLowerCase().includes(searchTerm);
-        
-        const matchesCategory = !selectedCategory || post.category === selectedCategory;
-        
-        const matchesTag = !selectedTag || 
-            (post.tags && post.tags.some(tag => tag === selectedTag));
-
-        return matchesSearch && matchesCategory && matchesTag;
-    });
-
-    // Sort posts
-    if (sortOrder === 'oldest') {
-        filteredPosts.sort((a, b) => new Date(a.date) - new Date(b.date));
-    } else {
-        filteredPosts.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-
-    renderArticlesList();
-}
-}
-
-function renderArticlesList() {
-    const container = document.getElementById('articlesList');
-    const empty = document.getElementById('blogEmpty');
-
-    if (filteredPosts.length === 0) {
-        container.innerHTML = '';
-        empty.style.display = 'block';
-        return;
-    }
-
-    empty.style.display = 'none';
-    
-    container.innerHTML = filteredPosts.map(post => `
-        <div class="article-list-item" onclick="showArticleDetail(${post.id})">
-            <div class="article-item-header">
-                <h3>${post.emoji || '📝'} ${post.title}</h3>
-                <span class="article-item-date">${formatDateWithTime(post.date)}</span>
-            </div>
-            <div class="article-item-meta">
-                <span class="article-item-category">${getCategoryLabel(post.category)}</span>
-                ${(post.tags || []).map(tag => `<span class="article-item-tag">#${tag}</span>`).join('')}
-            </div>
-            <div class="article-item-excerpt">${post.excerpt || post.content.substring(0, 120)}...</div>
-        </div>
-    `).join('');
-}
-
-function getCategoryLabel(category) {
-    const labels = {
-        'learning': '📚 Learning',
-        'life': '🌟 Life',
-        'tech': '💻 Tech',
-        'thoughts': '💭 Thoughts',
-        'travel': '✈️ Travel'
-    };
-    return labels[category] || 'Other';
-}
-
-// ========== LOCALSTORAGE ==========
-function saveBlogPostLocally(post) {
-    saveBlogPostsLocally();
-}
-
-function saveBlogPostsLocally() {
+    // Save to Firebase
     try {
-        localStorage.setItem('blogPosts', JSON.stringify(blogPosts.slice(0, 100)));
-    } catch (e) {
-        console.error('Failed to save to localStorage:', e);
+        const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts.json`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(post)
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ 文章已保存到 Firebase:', data.name);
+            
+            // Add to local array
+            blogPosts.push(post);
+            
+            // Close modal
+            closeWriteArticleModal();
+            
+            // Reload and render
+            loadBlogPosts();
+            
+            // Show success notification
+            showSuccessNotification(title);
+        }
+    } catch (error) {
+        console.error('❌ Save failed:', error);
+        alert('Failed to publish article');
     }
 }
 
-// ========== SUCCESS MODAL ==========
-function showPublishSuccessModal(title) {
+function showSuccessNotification(title) {
     const modal = document.createElement('div');
     modal.style.cssText = `
         position: fixed;
@@ -328,7 +148,7 @@ function showPublishSuccessModal(title) {
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 10001;
+        z-index: 11000;
         animation: fadeIn 0.3s ease;
     `;
     
@@ -345,7 +165,7 @@ function showPublishSuccessModal(title) {
     
     content.innerHTML = `
         <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
-        <h2 style="margin: 0 0 10px 0; color: #333; font-size: 24px;">Published Successfully!</h2>
+        <h2 style="margin: 0 0 10px 0; color: #333; font-size: 24px;">Published!</h2>
         <p style="margin: 0 0 20px 0; color: #666; font-size: 14px;">Article published to blog</p>
         <p style="margin: 0 0 30px 0; color: #999; font-size: 13px; word-break: break-word;">《${title}》</p>
         <button onclick="this.closest('[role=dialog]').remove()" style="
@@ -366,20 +186,9 @@ function showPublishSuccessModal(title) {
     content.setAttribute('role', 'dialog');
     modal.appendChild(content);
     
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
     document.body.appendChild(modal);
     
+    // Auto close after 4 seconds
     setTimeout(() => {
         modal.style.opacity = '0';
         modal.style.transition = 'opacity 0.3s ease';
@@ -387,85 +196,283 @@ function showPublishSuccessModal(title) {
     }, 4000);
 }
 
-// ========== PAGE NAVIGATION ==========
-function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(section => {
-        section.classList.remove('active');
-    });
-    document.getElementById(sectionId).classList.add('active');
-}
-
-function formatContent(text) {
-    return text.replace(/\n/g, '<br>');
-}
-
-// ========== INITIALIZATION ==========
-function setupWriteForm() {
-    const form = document.getElementById('writeForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
+// ==================== NAVIGATION ====================
+function initializeNavigation() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    console.log(`Found ${navLinks.length} nav links`);
+    
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
             e.preventDefault();
-            submitBlogPost();
+            const sectionId = this.getAttribute('data-section');
+            
+            // Update active state
+            navLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Navigate
+            window.location.hash = '#' + sectionId;
+            showSection(sectionId);
+        });
+    });
+}
+
+function handleHashChange() {
+    const hash = window.location.hash.substring(1);
+    console.log('📍 Hash changed to:', hash || 'home');
+    
+    if (hash.startsWith('post-')) {
+        const postId = parseInt(hash.replace('post-', ''));
+        showArticleDetail(postId);
+    } else {
+        showSection(hash || 'home');
+    }
+}
+
+function showSection(sectionId) {
+    console.log('📍 Showing section:', sectionId);
+    
+    const sections = document.querySelectorAll('section');
+    sections.forEach(section => section.style.display = 'none');
+    
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.style.display = 'block';
+        
+        // Update active nav link
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('data-section') === sectionId);
         });
     }
 }
 
-function setupFilters() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', applyFilters);
-    }
-}
-
-function loadBlogPosts() {
-    if (window.firebaseRestReady) {
-        try {
-            const firebasePosts = window.loadBlogPostsFromFirebase && window.loadBlogPostsFromFirebase();
-            if (firebasePosts && firebasePosts.length > 0) {
-                blogPosts = firebasePosts;
-                applyFilters();
-                return;
-            }
-        } catch (error) {
-            console.error('Failed to load from Firebase, using localStorage:', error);
+// ==================== BLOG POST FUNCTIONS ====================
+async function loadBlogPosts() {
+    console.log('🔄 Loading blog posts...');
+    
+    try {
+        const response = await fetch(`https://${firebaseConfig.projectId}-default-rtdb.firebaseio.com/posts.json`);
+        const data = await response.json();
+        
+        if (data && typeof data === 'object') {
+            blogPosts = Object.values(data).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            console.log(`✅ 从 Firebase 加载文章: ${blogPosts.length} 篇`);
+        } else {
+            blogPosts = [];
+            console.log('📝 Firebase 数据库为空');
         }
+    } catch (error) {
+        console.error('❌ Failed to load from Firebase:', error);
+        blogPosts = [];
     }
     
-    const saved = localStorage.getItem('blogPosts');
-    if (saved) {
-        try {
-            const localPosts = JSON.parse(saved);
-            blogPosts = [...localPosts, ...blogPosts];
-            applyFilters();
-        } catch (e) {
-            console.error('Failed to load localStorage:', e);
-        }
-    } else {
-        applyFilters();
-    }
-}
-
-// Initial setup
-document.addEventListener('DOMContentLoaded', function() {
-    setupWriteForm();
-    setupFilters();
-    loadBlogPosts();
+    // Render all
+    filteredPosts = [...blogPosts];
+    renderArticlesList();
     generateWordCloud();
-});
+    generateCategoryOptions();
+}
 
-// Hash-based routing
-function handleHashChange() {
-    const hash = window.location.hash.substring(1);
-    if (hash.startsWith('post-')) {
-        const postId = parseInt(hash.substring(5));
-        showArticleDetail(postId);
-    } else {
-        const sectionId = hash || 'home';
-        if (document.getElementById(sectionId)) {
-            showSection(sectionId);
-        }
+function renderArticlesList() {
+    console.log('🎨 renderArticlesList called, posts:', filteredPosts.length);
+    
+    const container = document.getElementById('articlesList');
+    if (!container) {
+        console.error('❌ articlesList element not found!');
+        return;
+    }
+    
+    const empty = document.getElementById('blogEmpty');
+    
+    if (filteredPosts.length === 0) {
+        container.innerHTML = '';
+        if (empty) empty.style.display = 'block';
+        return;
+    }
+    
+    if (empty) empty.style.display = 'none';
+    
+    container.innerHTML = filteredPosts.map(post => `
+        <div class="article-list-item" onclick="window.location.hash='#post-${post.id}'">
+            <div class="article-emoji">${post.emoji || '📝'}</div>
+            <div class="article-info">
+                <h3 class="article-title">${post.title}</h3>
+                <div class="article-meta">
+                    <span class="article-date">${post.date}</span>
+                    <span class="article-category">${categoryMap[post.category] || 'Other'}</span>
+                </div>
+                <p class="article-excerpt">${post.excerpt || post.content.substring(0, 100)}</p>
+                ${post.tags && post.tags.length > 0 ? `
+                    <div class="article-tags">
+                        ${post.tags.map(tag => `<span class="article-tag">#${tag}</span>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    console.log('✅ Articles rendered');
+}
+
+function showArticleDetail(postId) {
+    console.log('📖 Showing article:', postId);
+    
+    const post = blogPosts.find(p => p.id == postId);
+    if (!post) {
+        console.error('❌ Post not found:', postId);
+        return;
+    }
+    
+    const sections = document.querySelectorAll('section');
+    sections.forEach(s => s.style.display = 'none');
+    
+    const detailSection = document.getElementById('article-detail');
+    if (detailSection) {
+        detailSection.innerHTML = `
+            <div class="article-detail-container">
+                <button onclick="window.location.hash='#blog'" class="back-button">← Back</button>
+                <div class="article-detail-header">
+                    <span class="detail-emoji">${post.emoji || '📝'}</span>
+                    <h1>${post.title}</h1>
+                    <div class="detail-meta">
+                        <span>${post.date}</span>
+                        <span>${categoryMap[post.category] || 'Other'}</span>
+                    </div>
+                </div>
+                <div class="article-detail-content">
+                    ${post.content.split('\n').map(line => line.trim() ? `<p>${line}</p>` : '').join('')}
+                </div>
+                ${post.tags && post.tags.length > 0 ? `
+                    <div class="detail-tags">
+                        ${post.tags.map(tag => `<span class="detail-tag">#${tag}</span>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        detailSection.style.display = 'block';
     }
 }
 
-window.addEventListener('hashchange', handleHashChange);
-window.addEventListener('load', handleHashChange);
+// ==================== FILTERING ====================
+function applyFilters() {
+    console.log('🔍 Applying filters');
+    
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const categorySelect = document.getElementById('categorySelect');
+    
+    let results = [...blogPosts];
+    
+    // Search
+    if (searchInput && searchInput.value) {
+        const query = searchInput.value.toLowerCase();
+        results = results.filter(p =>
+            p.title.toLowerCase().includes(query) ||
+            p.content.toLowerCase().includes(query) ||
+            (p.tags && p.tags.some(tag => tag.toLowerCase().includes(query)))
+        );
+    }
+    
+    // Category
+    if (categorySelect && categorySelect.value) {
+        results = results.filter(p => p.category === categorySelect.value);
+    }
+    
+    // Sort
+    if (sortSelect && sortSelect.value === 'oldest') {
+        results.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    } else {
+        results.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+    
+    filteredPosts = results;
+    renderArticlesList();
+    console.log(`✅ Filtered to ${filteredPosts.length} articles`);
+}
+
+function generateCategoryOptions() {
+    console.log('🏷️ Generating categories');
+    
+    const select = document.getElementById('categorySelect');
+    if (!select) return;
+    
+    const categories = new Set();
+    blogPosts.forEach(p => {
+        if (p.category) categories.add(p.category);
+    });
+    
+    select.innerHTML = '<option value="">All Categories</option>' +
+        Array.from(categories).map(cat => 
+            `<option value="${cat}">${categoryMap[cat] || cat}</option>`
+        ).join('');
+}
+
+// ==================== KEYWORD CLOUD ====================
+function generateWordCloud() {
+    console.log('☁️ Generating word cloud');
+    
+    const container = document.getElementById('wordCloud');
+    if (!container) return;
+    
+    if (blogPosts.length === 0) {
+        container.innerHTML = '<p style="color: #999;">No keywords yet</p>';
+        return;
+    }
+    
+    const text = blogPosts
+        .map(p => (p.title + ' ' + p.content + ' ' + (p.tags || []).join(' ')).toLowerCase())
+        .join(' ');
+    
+    // Extract words
+    const words = text.match(/[\u4e00-\u9fa5]+|[a-z]+/gi) || [];
+    
+    // Stop words
+    const stopWords = new Set([
+        'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'is', 'are', 'was', 'were',
+        '的', '了', '是', '在', '我', '你', '他', '一', '有', '个', '这', '那', '不', '如', '和'
+    ]);
+    
+    // Count frequency
+    const freq = {};
+    words.forEach(w => {
+        if (w.length > 1 && !stopWords.has(w)) {
+            freq[w] = (freq[w] || 0) + 1;
+        }
+    });
+    
+    const sorted = Object.entries(freq)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30);
+    
+    if (sorted.length === 0) {
+        container.innerHTML = '<p style="color: #999;">No keywords yet</p>';
+        return;
+    }
+    
+    const minFreq = sorted[sorted.length - 1][1];
+    const maxFreq = sorted[0][1];
+    const range = maxFreq - minFreq || 1;
+    
+    container.innerHTML = sorted.map(([word, count]) => {
+        const ratio = (count - minFreq) / range;
+        const size = 12 + ratio * 20;
+        const opacity = 0.5 + ratio * 0.5;
+        return `<span style="font-size: ${size}px; opacity: ${opacity}; margin: 8px; cursor: pointer;" 
+                      onclick="document.getElementById('searchInput').value='${word}'; applyFilters();">
+                    ${word}(${count})
+                </span>`;
+    }).join('');
+    
+    console.log('✅ Word cloud generated');
+}
+
+// Add event listeners for filters
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const categorySelect = document.getElementById('categorySelect');
+    
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (sortSelect) sortSelect.addEventListener('change', applyFilters);
+    if (categorySelect) categorySelect.addEventListener('change', applyFilters);
+});
