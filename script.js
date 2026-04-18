@@ -566,7 +566,6 @@ function generateWordCloud() {
                 </span>`;
     }).join('');
 }
-}
 
 // ==================== NAVIGATION ====================
 function initializeNavigation() {
