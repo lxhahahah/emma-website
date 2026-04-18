@@ -1108,3 +1108,126 @@ body {
         opacity: 1;
     }
 }
+
+/* ==================== QUILL EDITOR STYLES ==================== */
+.quill-editor {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: white;
+}
+
+.ql-toolbar.ql-snow {
+    border: 1px solid #ddd;
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    background: #fafafa;
+}
+
+.ql-container.ql-snow {
+    border: 1px solid #ddd;
+    border-radius: 0 0 6px 6px;
+}
+
+/* ==================== EDIT BUTTON ==================== */
+.btn-edit {
+    background: #FFB6D9;
+    color: white;
+    padding: 8px 16px;
+    font-size: 12px;
+}
+
+.btn-edit:hover {
+    background: #E8A0C1;
+}
+
+/* ==================== SECTION CENTERING ==================== */
+#homeContent,
+#aboutContent {
+    text-align: center;
+    margin: 20px auto;
+    max-width: 800px;
+}
+
+#homeContent .about-card-home {
+    justify-content: center;
+}
+
+#aboutContent .about-main {
+    text-align: center;
+}
+
+#aboutContent .about-section {
+    text-align: center;
+}
+
+#aboutContent .about-list {
+    display: inline-block;
+    text-align: left;
+}
+
+/* ==================== EDIT MODAL STYLES ==================== */
+#editSectionModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+#editSectionModal[style*="flex"] {
+    display: flex !important;
+}
+
+#editSectionContainer {
+    outline: none;
+}
+
+#editSectionContainer:focus {
+    outline: 2px solid #E8A0C1;
+}
+
+/* ==================== AUTH MODAL ==================== */
+#authModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10001;
+}
+
+#authModal[style*="flex"] {
+    display: flex !important;
+}
+
+/* Contenteditable styling */
+[contenteditable="true"] {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
